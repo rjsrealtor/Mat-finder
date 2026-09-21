@@ -1,6 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+/**
+ * Supabase client for use in Server Components, Route Handlers and
+ * Server Actions. Reads/writes the auth session via Next.js cookies so
+ * the signed-in user carries across server and client.
+ *
+ * Not typed against a generated `Database` schema — see the note in
+ * lib/supabase/client.ts.
+ */
 export function createClient() {
   const cookieStore = cookies();
 
@@ -9,22 +17,17 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: any) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
           } catch {
             // Called from a Server Component render — middleware.ts
             // refreshes the session instead, so this is safe to ignore.
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: "", ...options });
-          } catch {
-            // Same as above.
           }
         },
       },
