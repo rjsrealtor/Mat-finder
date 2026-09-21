@@ -1,8 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { GiType, VisitorPolicy } from "@/lib/types";
+
+// 15-minute increments across a full day, e.g. "12:00 AM", "12:15 AM", … "11:45 PM".
+function buildTimeOptions() {
+  const options: string[] = [];
+  for (let minutes = 0; minutes < 24 * 60; minutes += 15) {
+    let hour24 = Math.floor(minutes / 60);
+    const min = minutes % 60;
+    const period = hour24 < 12 ? "AM" : "PM";
+    let hour12 = hour24 % 12;
+    if (hour12 === 0) hour12 = 12;
+    options.push(`${hour12}:${String(min).padStart(2, "0")} ${period}`);
+  }
+  return options;
+}
 
 const empty = {
   name: "",
@@ -10,7 +24,8 @@ const empty = {
   state: "",
   address: "",
   day: "",
-  time: "",
+  startTime: "10:00 AM",
+  endTime: "12:00 PM",
   gi: "gi_nogi" as GiType,
   feeType: "free" as "free" | "fee" | "varies",
   feeAmount: "",
@@ -31,6 +46,7 @@ export default function AddListingModal({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+  const timeOptions = useMemo(() => buildTimeOptions(), []);
 
   useEffect(() => {
     dialogRef.current?.showModal();
@@ -46,7 +62,7 @@ export default function AddListingModal({
   }
 
   async function submit() {
-    if (!form.name.trim() || !form.city.trim() || !form.state.trim() || !form.address.trim() || !form.day.trim() || !form.time.trim()) {
+    if (!form.name.trim() || !form.city.trim() || !form.state.trim() || !form.address.trim() || !form.day.trim() || !form.startTime || !form.endTime) {
       setError("Please fill in name, city, state, address, day and time.");
       return;
     }
@@ -75,7 +91,7 @@ export default function AddListingModal({
       state: form.state.trim().toUpperCase(),
       address: form.address.trim(),
       day: form.day.trim(),
-      time: form.time.trim(),
+      time: `${form.startTime} – ${form.endTime}`,
       gi: form.gi,
       fee_cents,
       fee_note: form.feeNote.trim() || null,
@@ -143,13 +159,32 @@ export default function AddListingModal({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>Time</label>
-            <input
+            <label className={labelClass}>Start time</label>
+            <select
               className={inputClass}
-              placeholder="e.g. 10:00 AM – 12:00 PM"
-              value={form.time}
-              onChange={(e) => set("time", e.target.value)}
-            />
+              value={form.startTime}
+              onChange={(e) => set("startTime", e.target.value)}
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className={labelClass}>End time</label>
+            <select
+              className={inputClass}
+              value={form.endTime}
+              onChange={(e) => set("endTime", e.target.value)}
+            >
+              {timeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col gap-1">
