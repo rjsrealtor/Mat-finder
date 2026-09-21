@@ -18,12 +18,22 @@ function buildTimeOptions() {
   return options;
 }
 
+const DAY_OPTIONS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 const empty = {
   name: "",
   city: "",
   state: "",
   address: "",
-  day: "",
+  day: "Sunday",
   startTime: "10:00 AM",
   endTime: "12:00 PM",
   gi: "gi_nogi" as GiType,
@@ -151,12 +161,13 @@ export default function AddListingModal({
           </div>
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Day</label>
-            <input
-              className={inputClass}
-              placeholder="e.g. Sunday"
-              value={form.day}
-              onChange={(e) => set("day", e.target.value)}
-            />
+            <select className={inputClass} value={form.day} onChange={(e) => set("day", e.target.value)}>
+              {DAY_OPTIONS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Start time</label>
