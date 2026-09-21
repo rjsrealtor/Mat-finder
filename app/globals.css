@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #eef1ef;
+  --surface: #ffffff;
+  --surface-2: #e3e9e5;
+  --border: #cdd6d1;
+  --text: #16211d;
+  --text-dim: #5b6a63;
+  --accent: #1f6f54;
+  --accent-ink: #ffffff;
+  --gold: #a9781f;
+  --gold-bg: #f3e6cb;
+  --danger: #a5402a;
+  --danger-bg: #f6ded7;
+  --chip-bg: #dfe7e2;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101613;
+    --surface: #171f1b;
+    --surface-2: #1e2823;
+    --border: #2c3733;
+    --text: #eef1ee;
+    --text-dim: #93a39b;
+    --accent: #45b78c;
+    --accent-ink: #0b1512;
+    --gold: #e2b155;
+    --gold-bg: #362b16;
+    --danger: #e2836c;
+    --danger-bg: #3a231d;
+    --chip-bg: #202b25;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-oswald), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.card-shadow {
+  box-shadow:
+    0 1px 2px rgba(20, 30, 25, 0.06),
+    0 6px 20px -8px rgba(20, 30, 25, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card-shadow {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 10px 24px -10px rgba(0, 0, 0, 0.55);
+  }
+}
