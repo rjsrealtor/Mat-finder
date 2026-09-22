@@ -9,6 +9,11 @@ export const GI_LABEL: Record<string, string> = {
   gi_nogi: "Gi & No-Gi",
 };
 
+/** tel: link that works however the number was typed. */
+export function telHref(phone: string) {
+  return `tel:${phone.replace(/[^\d+]/g, "")}`;
+}
+
 export function feeLabel(l: ListingWithRating) {
   if (l.fee_cents === 0) return "Free";
   if (l.fee_cents === null || l.fee_cents === undefined) return l.fee_note || "Varies";
@@ -84,7 +89,21 @@ export default function ListingCard({
         <p className="text-sm text-dim">{listing.policy_note}</p>
       )}
 
-      <p className="text-xs text-dim">{listing.address}</p>
+      <p className="text-xs text-dim">
+        {listing.address}
+        {listing.phone && (
+          <>
+            {" · "}
+            <a
+              href={telHref(listing.phone)}
+              onClick={(e) => e.stopPropagation()}
+              className="text-accent hover:underline whitespace-nowrap"
+            >
+              {listing.phone}
+            </a>
+          </>
+        )}
+      </p>
 
       <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
         <span className="inline-flex items-center gap-1.5">

@@ -33,6 +33,7 @@ const empty = {
   city: "",
   state: "",
   address: "",
+  phone: "",
   day: "Sunday",
   startTime: "10:00 AM",
   endTime: "12:00 PM",
@@ -54,6 +55,7 @@ function formFromListing(l: ListingWithRating): typeof empty {
     city: l.city,
     state: l.state,
     address: l.address,
+    phone: l.phone ?? "",
     day: l.day,
     timeText: l.time,
     gi: l.gi,
@@ -127,6 +129,7 @@ export default function AddListingModal({
       city: form.city.trim(),
       state: form.state.trim().toUpperCase(),
       address: form.address.trim(),
+      phone: form.phone.trim() || null,
       day: form.day.trim(),
       time: editing ? form.timeText.trim() : `${form.startTime} – ${form.endTime}`,
       gi: form.gi,
@@ -208,6 +211,16 @@ export default function AddListingModal({
           <div className="flex flex-col gap-1 col-span-2">
             <label className={labelClass}>Address</label>
             <input className={inputClass} value={form.address} onChange={(e) => set("address", e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-1 col-span-2">
+            <label className={labelClass}>Phone (optional)</label>
+            <input
+              className={inputClass}
+              type="tel"
+              placeholder="e.g. (714) 555-0123"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Day</label>

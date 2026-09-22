@@ -14,6 +14,7 @@ export interface Listing {
   city: string;
   state: string;
   address: string;
+  phone: string | null;
   day: string;
   time: string;
   gi: GiType;

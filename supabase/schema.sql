@@ -61,6 +61,7 @@ create table if not exists listings (
   city text not null,
   state text not null,
   address text not null,
+  phone text,
   day text not null,
   time text not null,
   gi gi_type not null default 'gi_nogi',

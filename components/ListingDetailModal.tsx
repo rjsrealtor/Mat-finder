@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { createClient } from "@/lib/supabase/client";
-import { GI_LABEL, feeLabel } from "./ListingCard";
+import { GI_LABEL, feeLabel, telHref } from "./ListingCard";
 import type { ListingWithRating } from "@/lib/types";
 
 type Review = {
@@ -86,6 +86,16 @@ export default function ListingDetailModal({
         {listing.address}
       </a>,
     ],
+    ...(listing.phone
+      ? ([
+          [
+            "Phone",
+            <a key="p" href={telHref(listing.phone)} className="text-accent hover:underline">
+              {listing.phone}
+            </a>,
+          ],
+        ] as [string, React.ReactNode][])
+      : []),
     ["Last updated", formatDate(listing.updated_at)],
   ];
 
