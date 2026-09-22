@@ -3,13 +3,13 @@
 import StarRating from "./StarRating";
 import type { ListingWithRating } from "@/lib/types";
 
-const GI_LABEL: Record<string, string> = {
+export const GI_LABEL: Record<string, string> = {
   gi: "Gi",
   nogi: "No-Gi",
   gi_nogi: "Gi & No-Gi",
 };
 
-function feeLabel(l: ListingWithRating) {
+export function feeLabel(l: ListingWithRating) {
   if (l.fee_cents === 0) return "Free";
   if (l.fee_cents === null || l.fee_cents === undefined) return l.fee_note || "Varies";
   return `$${(l.fee_cents / 100).toFixed(l.fee_cents % 100 === 0 ? 0 : 2)}`;
@@ -21,8 +21,11 @@ export default function ListingCard({
   onReport,
   onEdit,
   onDelete,
+  onOpen,
 }: {
   listing: ListingWithRating;
+  /** Opens the full details + reviews view. */
+  onOpen: (listing: ListingWithRating) => void;
   onRate: (listing: ListingWithRating) => void;
   onReport: (listing: ListingWithRating) => void;
   /** Admin-only actions; buttons are hidden when these aren't passed. */
@@ -35,7 +38,17 @@ export default function ListingCard({
 
   return (
     <div
-      className={`card-shadow rounded-card border border-border bg-surface p-4 flex flex-col gap-3 ${
+      role="button"
+      tabIndex={0}
+      aria-label={`View details and reviews for ${listing.name}`}
+      onClick={() => onOpen(listing)}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onOpen(listing);
+        }
+      }}
+      className={`card-shadow rounded-card border border-border bg-surface p-4 flex flex-col gap-3 cursor-pointer hover:border-accent transition-colors ${
         flagged ? "opacity-70" : ""
       }`}
     >
@@ -74,8 +87,14 @@ export default function ListingCard({
       <p className="text-xs text-dim">{listing.address}</p>
 
       <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
-        <StarRating value={listing.rating_avg} count={listing.rating_count} />
-        <div className="flex gap-2">
+        <span className="inline-flex items-center gap-1.5">
+          <StarRating value={listing.rating_avg} count={listing.rating_count} />
+          <span className="text-xs text-accent font-semibold">
+            {listing.rating_count > 0 ? "Read reviews" : "Details"}
+          </span>
+        </span>
+        {/* Action buttons shouldn't also open the details view. */}
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => onRate(listing)}
             className="text-xs font-semibold text-accent hover:underline"

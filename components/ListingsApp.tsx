@@ -7,6 +7,7 @@ import ListingCard from "./ListingCard";
 import AddListingModal from "./AddListingModal";
 import RateModal from "./RateModal";
 import ReportModal from "./ReportModal";
+import ListingDetailModal from "./ListingDetailModal";
 import { STATE_NAMES } from "@/lib/us-states";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
@@ -58,6 +59,7 @@ export default function ListingsApp({
   const [rateTarget, setRateTarget] = useState<ListingWithRating | null>(null);
   const [reportTarget, setReportTarget] = useState<ListingWithRating | null>(null);
   const [editTarget, setEditTarget] = useState<ListingWithRating | null>(null);
+  const [detailTarget, setDetailTarget] = useState<ListingWithRating | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -275,6 +277,7 @@ export default function ListingsApp({
               listing={listing}
               onRate={(l) => requireAuth(() => setRateTarget(l))}
               onReport={(l) => requireAuth(() => setReportTarget(l))}
+              onOpen={setDetailTarget}
               onEdit={isAdmin ? setEditTarget : undefined}
               onDelete={isAdmin ? deleteListing : undefined}
             />
@@ -294,6 +297,15 @@ export default function ListingsApp({
       )}
 
       {addOpen && <AddListingModal onClose={() => setAddOpen(false)} onDone={load} />}
+      {detailTarget && (
+        <ListingDetailModal
+          listing={detailTarget}
+          onClose={() => setDetailTarget(null)}
+          onRate={(l) => requireAuth(() => setRateTarget(l))}
+          onReport={(l) => requireAuth(() => setReportTarget(l))}
+          onEdit={isAdmin ? setEditTarget : undefined}
+        />
+      )}
       {editTarget && (
         <AddListingModal listing={editTarget} onClose={() => setEditTarget(null)} onDone={load} />
       )}
