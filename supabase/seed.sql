@@ -21,4 +21,4 @@ values
   ('Fight For Us Jiu Jitsu', 'Las Vegas', 'NV', '7135 W Ann Rd #140, Las Vegas, NV 89130', 'Saturday', 'From 10:00 AM', 'gi_nogi', 0, 'Free with intro trial — ask about drop-in rate after', 'open', 'Kids and adults, no formal class structure.', 'active', 'seed'),
   ('RocknRoll BJJ & Fitness', 'Santa Ana', 'CA', '10862 Coronel Rd Suite B, Santa Ana, CA 92705', 'Saturday', 'Morning — see gym for exact time', 'gi', 0, 'Free', 'open', 'All schools and belt levels invited; visitors from out of town welcome.', 'active', 'seed'),
   ('Refuge BJJ', 'Phoenix', 'AZ', '711 E Carefree Hwy Suite 201, Phoenix, AZ 85085', 'Saturday', 'Morning — see gym schedule', 'gi_nogi', null, 'Contact gym', 'open', 'Walk-ins and visitors always welcome.', 'active', 'seed')
-on conflict (name, city) do nothing;
+on conflict (name, city, day, time) do nothing;

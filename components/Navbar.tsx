@@ -54,6 +54,10 @@ export default function Navbar() {
           <span className="display text-lg tracking-wide">Mat Finder</span>
         </Link>
 
+        <Link href="/open-mats" className="text-sm text-dim hover:text-ink ml-auto">
+          Cities
+        </Link>
+
         {!loaded ? null : user ? (
           <div className="flex items-center gap-3 text-sm">
             {isAdmin && (

@@ -22,13 +22,28 @@ function listingSearchText(l: ListingWithRating) {
 type GiFilter = "any" | "gi" | "nogi" | "gi_nogi";
 type FeeFilter = "any" | "free" | "fee";
 
-export default function ListingsApp() {
+export default function ListingsApp({
+  initialListings,
+  city,
+  title = "Find a BJJ open mat",
+  intro = "Free, crowd-verified open mats and drop-in sessions. Filter by day, gi or no-gi, fee and rating — every listing here allows visitors.",
+  children,
+}: {
+  /** Server-fetched listings so the page renders with content (and search engines can read it). */
+  initialListings?: ListingWithRating[];
+  /** Limit the page to one city (used by /open-mats/[city]). */
+  city?: { city: string; state: string };
+  title?: string;
+  intro?: string;
+  children?: React.ReactNode;
+} = {}) {
   const supabase = createClient();
 
-  const [listings, setListings] = useState<ListingWithRating[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState<ListingWithRating[]>(initialListings ?? []);
+  const [loading, setLoading] = useState(!initialListings);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [search, setSearch] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -42,13 +57,13 @@ export default function ListingsApp() {
   const [addOpen, setAddOpen] = useState(false);
   const [rateTarget, setRateTarget] = useState<ListingWithRating | null>(null);
   const [reportTarget, setReportTarget] = useState<ListingWithRating | null>(null);
+  const [editTarget, setEditTarget] = useState<ListingWithRating | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("listings_with_rating")
-      .select("*")
-      .order("name", { ascending: true });
+    let query = supabase.from("listings_with_rating").select("*");
+    if (city) query = query.eq("city", city.city).eq("state", city.state);
+    const { data, error } = await query.order("name", { ascending: true });
 
     if (error) {
       setLoadError(error.message);
@@ -57,7 +72,8 @@ export default function ListingsApp() {
       setListings((data ?? []) as ListingWithRating[]);
     }
     setLoading(false);
-  }, [supabase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase, city?.city, city?.state]);
 
   useEffect(() => {
     load();
@@ -113,6 +129,30 @@ export default function ListingsApp() {
     });
   }, [listings, search, day, gi, fee, minRating, showFlagged]);
 
+  // Same admin check as Navbar; the database enforces it too (RLS), this only toggles the buttons.
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single()
+      .then(({ data: profile }) => setIsAdmin(Boolean(profile?.is_admin)));
+  }, [user, supabase]);
+
+  async function deleteListing(l: ListingWithRating) {
+    if (!window.confirm(`Delete "${l.name}" (${l.day}, ${l.time})?\n\nThis also removes its ratings and reports and can't be undone.`)) return;
+    const { data, error } = await supabase.from("listings").delete().eq("id", l.id).select("id");
+    if (error || !data || data.length === 0) {
+      window.alert(error?.message ?? "You don't have permission to delete this listing.");
+      return;
+    }
+    load();
+  }
+
   function requireAuth(action: () => void) {
     if (!user) {
       window.location.href = "/login";
@@ -124,11 +164,8 @@ export default function ListingsApp() {
   return (
     <div className="max-w-[1080px] mx-auto px-5 pb-16">
       <section className="py-8 sm:py-10">
-        <h1 className="text-3xl sm:text-4xl">Find a BJJ open mat</h1>
-        <p className="text-dim mt-2 max-w-[60ch]">
-          Free, crowd-verified open mats and drop-in sessions. Filter by day, gi or no-gi, fee and
-          rating — every listing here allows visitors.
-        </p>
+        <h1 className="text-3xl sm:text-4xl">{title}</h1>
+        <p className="text-dim mt-2 max-w-[60ch]">{intro}</p>
       </section>
 
       <section className="sticky top-0 z-20 -mx-5 px-5 py-3 bg-bg border-y border-border">
@@ -238,10 +275,14 @@ export default function ListingsApp() {
               listing={listing}
               onRate={(l) => requireAuth(() => setRateTarget(l))}
               onReport={(l) => requireAuth(() => setReportTarget(l))}
+              onEdit={isAdmin ? setEditTarget : undefined}
+              onDelete={isAdmin ? deleteListing : undefined}
             />
           ))}
         </div>
       </section>
+
+      {children}
 
       {!user && !loading && (
         <p className="text-xs text-dim text-center pb-4">
@@ -253,6 +294,9 @@ export default function ListingsApp() {
       )}
 
       {addOpen && <AddListingModal onClose={() => setAddOpen(false)} onDone={load} />}
+      {editTarget && (
+        <AddListingModal listing={editTarget} onClose={() => setEditTarget(null)} onDone={load} />
+      )}
       {rateTarget && (
         <RateModal listing={rateTarget} onClose={() => setRateTarget(null)} onDone={load} />
       )}

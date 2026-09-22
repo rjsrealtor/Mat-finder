@@ -79,8 +79,10 @@ create table if not exists listings (
 create index if not exists listings_city_idx on listings (lower(city));
 create index if not exists listings_status_idx on listings (status);
 
--- lets supabase/seed.sql upsert instead of duplicating on re-run
-create unique index if not exists listings_name_city_key on listings (name, city);
+-- blocks exact duplicates (and lets supabase/seed.sql re-run safely) while
+-- still allowing one gym to list open mats on several days / times
+drop index if exists listings_name_city_key;
+create unique index if not exists listings_name_city_day_time_key on listings (name, city, day, time);
 
 alter table listings enable row level security;
 
@@ -148,6 +150,9 @@ select
 from listings l
 left join ratings r on r.listing_id = l.id
 group by l.id;
+
+-- run with the caller's permissions (so RLS on listings/ratings applies)
+alter view listings_with_rating set (security_invoker = true);
 
 -- ---------- apply_report RPC ----------
 -- Called by the app instead of letting users UPDATE listings directly:

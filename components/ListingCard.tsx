@@ -19,10 +19,15 @@ export default function ListingCard({
   listing,
   onRate,
   onReport,
+  onEdit,
+  onDelete,
 }: {
   listing: ListingWithRating;
   onRate: (listing: ListingWithRating) => void;
   onReport: (listing: ListingWithRating) => void;
+  /** Admin-only actions; buttons are hidden when these aren't passed. */
+  onEdit?: (listing: ListingWithRating) => void;
+  onDelete?: (listing: ListingWithRating) => void;
 }) {
   const isMembersOnly = listing.visitor_policy === "members_only";
   const isClosed = listing.status === "closed";
@@ -83,6 +88,22 @@ export default function ListingCard({
           >
             Report
           </button>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(listing)}
+              className="text-xs font-semibold text-gold hover:underline"
+            >
+              Edit
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={() => onDelete(listing)}
+              className="text-xs font-semibold text-danger hover:underline"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </div>

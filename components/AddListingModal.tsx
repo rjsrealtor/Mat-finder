@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { GiType, VisitorPolicy } from "@/lib/types";
+import type { GiType, ListingStatus, ListingWithRating, VisitorPolicy } from "@/lib/types";
 
 // 15-minute increments across a full day, e.g. "12:00 AM", "12:15 AM", … "11:45 PM".
 function buildTimeOptions() {
@@ -42,17 +42,43 @@ const empty = {
   feeNote: "",
   visitorPolicy: "open" as VisitorPolicy,
   policyNote: "",
+  // Edit mode only: free-text time (older listings aren't in "start – end" form) and status.
+  timeText: "",
+  status: "active" as ListingStatus,
 };
+
+function formFromListing(l: ListingWithRating): typeof empty {
+  return {
+    ...empty,
+    name: l.name,
+    city: l.city,
+    state: l.state,
+    address: l.address,
+    day: l.day,
+    timeText: l.time,
+    gi: l.gi,
+    feeType: l.fee_cents === 0 ? "free" : l.fee_cents == null ? "varies" : "fee",
+    feeAmount: l.fee_cents ? String(l.fee_cents / 100) : "",
+    feeNote: l.fee_note ?? "",
+    visitorPolicy: l.visitor_policy,
+    policyNote: l.policy_note ?? "",
+    status: l.status,
+  };
+}
 
 export default function AddListingModal({
   onClose,
   onDone,
+  listing,
 }: {
   onClose: () => void;
   onDone: () => void;
+  /** When set, the modal edits this listing (admin only) instead of adding a new one. */
+  listing?: ListingWithRating;
 }) {
+  const editing = Boolean(listing);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => (listing ? formFromListing(listing) : empty));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -72,7 +98,8 @@ export default function AddListingModal({
   }
 
   async function submit() {
-    if (!form.name.trim() || !form.city.trim() || !form.state.trim() || !form.address.trim() || !form.day.trim() || !form.startTime || !form.endTime) {
+    const hasTime = editing ? Boolean(form.timeText.trim()) : Boolean(form.startTime && form.endTime);
+    if (!form.name.trim() || !form.city.trim() || !form.state.trim() || !form.address.trim() || !form.day.trim() || !hasTime) {
       setError("Please fill in name, city, state, address, day and time.");
       return;
     }
@@ -95,26 +122,47 @@ export default function AddListingModal({
       fee_cents = null;
     }
 
-    const { error: insertError } = await supabase.from("listings").insert({
+    const fields = {
       name: form.name.trim(),
       city: form.city.trim(),
       state: form.state.trim().toUpperCase(),
       address: form.address.trim(),
       day: form.day.trim(),
-      time: `${form.startTime} – ${form.endTime}`,
+      time: editing ? form.timeText.trim() : `${form.startTime} – ${form.endTime}`,
       gi: form.gi,
       fee_cents,
       fee_note: form.feeNote.trim() || null,
       visitor_policy: form.visitorPolicy,
       policy_note: form.policyNote.trim() || null,
-      status: "active",
-      source: "community",
-      created_by: userRes.user.id,
-    });
+    };
+
+    let saveError: string | null = null;
+    if (listing) {
+      // RLS only lets admins update; a non-admin gets 0 rows back rather than an error.
+      const { data, error } = await supabase
+        .from("listings")
+        .update({ ...fields, status: form.status, updated_at: new Date().toISOString() })
+        .eq("id", listing.id)
+        .select("id");
+      if (error) saveError = error.message;
+      else if (!data || data.length === 0) saveError = "You don't have permission to edit this listing.";
+    } else {
+      const { error } = await supabase.from("listings").insert({
+        ...fields,
+        status: "active",
+        source: "community",
+        created_by: userRes.user.id,
+      });
+      if (error) saveError = error.message;
+    }
 
     setBusy(false);
-    if (insertError) {
-      setError(insertError.message);
+    if (saveError) {
+      setError(
+        saveError.includes("duplicate key")
+          ? "That gym already has an open mat listed at this day and time."
+          : saveError
+      );
       return;
     }
     onDone();
@@ -136,9 +184,11 @@ export default function AddListingModal({
         className="p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
       >
         <div>
-          <h2 className="text-lg">Add an open mat</h2>
+          <h2 className="text-lg">{editing ? "Edit open mat" : "Add an open mat"}</h2>
           <p className="text-sm text-dim mt-0.5">
-            Know a gym with a solid drop-in open mat? Add it so the community can find it.
+            {editing
+              ? "Admin edit — changes show on the site right away."
+              : "Know a gym with a solid drop-in open mat? Add it so the community can find it."}
           </p>
         </div>
 
@@ -162,13 +212,25 @@ export default function AddListingModal({
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Day</label>
             <select className={inputClass} value={form.day} onChange={(e) => set("day", e.target.value)}>
-              {DAY_OPTIONS.map((d) => (
+              {(DAY_OPTIONS.includes(form.day) ? DAY_OPTIONS : [form.day, ...DAY_OPTIONS]).map((d) => (
                 <option key={d} value={d}>
                   {d}
                 </option>
               ))}
             </select>
           </div>
+          {editing ? (
+            <div className="flex flex-col gap-1">
+              <label className={labelClass}>Time</label>
+              <input
+                className={inputClass}
+                placeholder="e.g. 11:00 AM – 12:30 PM"
+                value={form.timeText}
+                onChange={(e) => set("timeText", e.target.value)}
+              />
+            </div>
+          ) : (
+          <>
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Start time</label>
             <select
@@ -197,6 +259,8 @@ export default function AddListingModal({
               ))}
             </select>
           </div>
+          </>
+          )}
 
           <div className="flex flex-col gap-1">
             <label className={labelClass}>Gi / No-Gi</label>
@@ -252,6 +316,7 @@ export default function AddListingModal({
             >
               <option value="open">Open to all visitors</option>
               <option value="conditions">Open with conditions (belt, experience, age, etc.)</option>
+              {editing && <option value="members_only">Members only</option>}
             </select>
             <p className="text-xs text-dim mt-0.5">
               Only add members-only mats if you want to warn others — those get flagged automatically.
@@ -269,6 +334,20 @@ export default function AddListingModal({
           </div>
         </div>
 
+        {editing && (
+          <div className="flex flex-col gap-1">
+            <label className={labelClass}>Status</label>
+            <select
+              className={inputClass}
+              value={form.status}
+              onChange={(e) => set("status", e.target.value as ListingStatus)}
+            >
+              <option value="active">Active</option>
+              <option value="closed">Closed / no longer offered</option>
+            </select>
+          </div>
+        )}
+
         {error && <p className="text-sm text-danger">{error}</p>}
 
         <div className="flex justify-end gap-2 pt-1">
@@ -285,7 +364,7 @@ export default function AddListingModal({
             onClick={submit}
             className="text-sm px-4 py-1.5 rounded-lg bg-accent text-accentInk font-semibold disabled:opacity-60"
           >
-            {busy ? "Adding…" : "Add open mat"}
+            {busy ? (editing ? "Saving…" : "Adding…") : editing ? "Save changes" : "Add open mat"}
           </button>
         </div>
       </form>
