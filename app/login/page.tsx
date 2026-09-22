@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -37,6 +38,8 @@ export default function LoginPage() {
         email,
         password,
         options: {
+          // Picked up by the handle_new_user trigger to fill profiles.display_name.
+          data: { display_name: displayName.trim() },
           emailRedirectTo:
             typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
         },
@@ -61,6 +64,24 @@ export default function LoginPage() {
       </p>
 
       <form onSubmit={submit} className="flex flex-col gap-3">
+        {mode === "signup" && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="displayName" className="text-xs font-semibold text-dim uppercase tracking-wide">
+              Display name
+            </label>
+            <input
+              id="displayName"
+              required
+              minLength={2}
+              maxLength={30}
+              placeholder="Shown on your reviews"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="rounded-lg border border-border bg-surface text-ink p-2.5 text-sm"
+            />
+          </div>
+        )}
+
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="text-xs font-semibold text-dim uppercase tracking-wide">
             Email

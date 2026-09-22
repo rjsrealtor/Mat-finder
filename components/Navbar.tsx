@@ -65,9 +65,9 @@ export default function Navbar() {
                 Admin
               </Link>
             )}
-            <span className="text-dim hidden sm:inline">
-              {user.email}
-            </span>
+            <Link href="/account" className="text-dim hover:text-ink">
+              Account
+            </Link>
             <button
               onClick={signOut}
               className="border border-border rounded-lg px-3 py-1.5 text-dim hover:text-ink hover:border-dim transition-colors"

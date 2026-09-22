@@ -207,6 +207,8 @@ grant select on table profiles, listings, ratings, reports, listings_with_rating
   to anon, authenticated;
 
 grant insert on table profiles, listings, ratings, reports to authenticated;
-grant update on table profiles, ratings to authenticated;
+grant update on table ratings to authenticated;
+-- Column-level: users may rename themselves but never touch is_admin.
+grant update (display_name) on table profiles to authenticated;
 
 grant execute on function public.apply_report to authenticated;
