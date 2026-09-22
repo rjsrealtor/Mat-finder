@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 import { createClient } from "@/lib/supabase/client";
 import { GI_LABEL, feeLabel, telHref } from "./ListingCard";
+import { placeLabel, websiteLabel } from "@/lib/location";
 import type { ListingWithRating } from "@/lib/types";
 
 type Review = {
@@ -96,6 +97,16 @@ export default function ListingDetailModal({
           ],
         ] as [string, React.ReactNode][])
       : []),
+    ...(listing.website
+      ? ([
+          [
+            "Website",
+            <a key="w" href={listing.website} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline break-all">
+              {websiteLabel(listing.website)}
+            </a>,
+          ],
+        ] as [string, React.ReactNode][])
+      : []),
     ["Last updated", formatDate(listing.updated_at)],
   ];
 
@@ -111,7 +122,7 @@ export default function ListingDetailModal({
           <div>
             <h2 className="text-xl leading-tight">{listing.name}</h2>
             <p className="text-sm text-dim mt-0.5">
-              {listing.city}, {listing.state}
+              {placeLabel(listing)}
             </p>
             {listing.status === "closed" && (
               <span className="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full bg-dangerBg text-danger">

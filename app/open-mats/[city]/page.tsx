@@ -18,7 +18,10 @@ async function getCity(slug: string): Promise<{ city: CityGroup; others: CityGro
     .filter((c) => c.slug !== slug && c.listings.some(isVisitable))
     .map((c) => ({ ...c, listings: c.listings.filter(isVisitable) }));
   // Same-state cities first, then everything else.
-  others.sort((a, b) => Number(b.state === city.state) - Number(a.state === city.state));
+  // Nearby first: same state/region, then same country, then everything else.
+  const closeness = (c: CityGroup) =>
+    (c.country === city.country ? 2 : 0) + (c.country === city.country && c.state === city.state ? 1 : 0);
+  others.sort((a, b) => closeness(b) - closeness(a));
   return { city, others: others.slice(0, 24) };
 }
 
@@ -30,14 +33,14 @@ function describe(c: CityGroup) {
   const open = c.listings.filter(isVisitable);
   const days = Array.from(new Set(open.map((l) => l.day))).slice(0, 3).join(", ");
   const count = open.length === 1 ? "1 BJJ open mat" : `${open.length} BJJ open mats`;
-  return `${count} in ${c.city}, ${c.state}${days ? ` — ${days}` : ""}. Days, times, gi or no-gi, drop-in fees and visitor rules, kept up to date by local grapplers.`;
+  return `${count} in ${c.label}${days ? ` — ${days}` : ""}. Days, times, gi or no-gi, drop-in fees and visitor rules, kept up to date by local grapplers.`;
 }
 
 export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
   const found = await getCity(params.city);
   if (!found) return { title: "City not found | Mat Finder" };
   const { city } = found;
-  const title = `BJJ Open Mats in ${city.city}, ${city.state} | Mat Finder`;
+  const title = `BJJ Open Mats in ${city.label} | Mat Finder`;
   const description = describe(city);
   return {
     title,
@@ -57,7 +60,7 @@ export default async function CityPage({ params }: { params: { city: string } })
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: `BJJ open mats in ${city.city}, ${city.state}`,
+    name: `BJJ open mats in ${city.label}`,
     url: `${SITE_URL}/open-mats/${city.slug}`,
     itemListElement: city.listings.filter(isVisitable).map((l, i) => ({
       "@type": "ListItem",
@@ -79,8 +82,8 @@ export default async function CityPage({ params }: { params: { city: string } })
       />
       <ListingsApp
         initialListings={city.listings}
-        city={{ city: city.city, state: city.state }}
-        title={`BJJ open mats in ${city.city}, ${city.state}`}
+        city={{ city: city.city, state: city.state, country: city.country }}
+        title={`BJJ open mats in ${city.label}`}
         intro={describe(city)}
       >
         <CityLinks cities={others} heading="Open mats in other cities" />

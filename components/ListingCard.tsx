@@ -1,6 +1,7 @@
 "use client";
 
 import StarRating from "./StarRating";
+import { formatMoney, placeLabel } from "@/lib/location";
 import type { ListingWithRating } from "@/lib/types";
 
 export const GI_LABEL: Record<string, string> = {
@@ -17,7 +18,7 @@ export function telHref(phone: string) {
 export function feeLabel(l: ListingWithRating) {
   if (l.fee_cents === 0) return "Free";
   if (l.fee_cents === null || l.fee_cents === undefined) return l.fee_note || "Varies";
-  return `$${(l.fee_cents / 100).toFixed(l.fee_cents % 100 === 0 ? 0 : 2)}`;
+  return formatMoney(l.fee_cents, l.currency || "USD");
 }
 
 export default function ListingCard({
@@ -61,7 +62,7 @@ export default function ListingCard({
         <div>
           <h3 className="text-base leading-tight">{listing.name}</h3>
           <p className="text-sm text-dim mt-0.5">
-            {listing.city}, {listing.state}
+            {placeLabel(listing)}
           </p>
         </div>
         {isClosed && (

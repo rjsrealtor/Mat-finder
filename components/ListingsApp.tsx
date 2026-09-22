@@ -8,16 +8,12 @@ import AddListingModal from "./AddListingModal";
 import RateModal from "./RateModal";
 import ReportModal from "./ReportModal";
 import ListingDetailModal from "./ListingDetailModal";
-import { STATE_NAMES } from "@/lib/us-states";
+import { placeLabel, placeSearchText, regionLabel } from "@/lib/location";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
-function stateFullName(stateCode: string) {
-  return STATE_NAMES[stateCode.trim().toUpperCase()] ?? stateCode;
-}
-
 function listingSearchText(l: ListingWithRating) {
-  return `${l.name} ${l.city} ${l.state} ${stateFullName(l.state)}`.toLowerCase();
+  return `${l.name} ${placeSearchText(l)}`.toLowerCase();
 }
 
 type GiFilter = "any" | "gi" | "nogi" | "gi_nogi";
@@ -33,7 +29,7 @@ export default function ListingsApp({
   /** Server-fetched listings so the page renders with content (and search engines can read it). */
   initialListings?: ListingWithRating[];
   /** Limit the page to one city (used by /open-mats/[city]). */
-  city?: { city: string; state: string };
+  city?: { city: string; state: string; country: string };
   title?: string;
   intro?: string;
   children?: React.ReactNode;
@@ -64,7 +60,7 @@ export default function ListingsApp({
   const load = useCallback(async () => {
     setLoading(true);
     let query = supabase.from("listings_with_rating").select("*");
-    if (city) query = query.eq("city", city.city).eq("state", city.state);
+    if (city) query = query.eq("city", city.city).eq("state", city.state).eq("country", city.country);
     const { data, error } = await query.order("name", { ascending: true });
 
     if (error) {
@@ -75,7 +71,7 @@ export default function ListingsApp({
     }
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase, city?.city, city?.state]);
+  }, [supabase, city?.city, city?.state, city?.country]);
 
   useEffect(() => {
     load();
@@ -94,8 +90,8 @@ export default function ListingsApp({
   const locationOptions = useMemo(() => {
     const set = new Set<string>();
     for (const l of listings) {
-      set.add(`${l.city}, ${l.state}`);
-      set.add(stateFullName(l.state));
+      set.add(placeLabel(l));
+      set.add(regionLabel(l));
     }
     return Array.from(set).sort();
   }, [listings]);
@@ -180,7 +176,7 @@ export default function ListingsApp({
                 setShowSuggestions(true);
               }}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="Search by gym, city or state…"
+              placeholder="Search by gym, city, state or country…"
               className="w-full rounded-lg border border-border bg-surface text-ink px-3 py-2 text-sm"
               autoComplete="off"
             />

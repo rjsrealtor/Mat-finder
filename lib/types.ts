@@ -12,13 +12,19 @@ export interface Listing {
   id: string;
   name: string;
   city: string;
+  /** US state code; free-text region (or "") outside the US. */
   state: string;
+  /** ISO 3166-1 alpha-2, e.g. "US", "GB", "BR". */
+  country: string;
   address: string;
   phone: string | null;
+  website: string | null;
   day: string;
   time: string;
   gi: GiType;
   fee_cents: number | null;
+  /** ISO 4217 code for fee_cents, e.g. "USD", "GBP". */
+  currency: string;
   fee_note: string | null;
   visitor_policy: VisitorPolicy;
   policy_note: string | null;

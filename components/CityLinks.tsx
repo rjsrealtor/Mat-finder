@@ -14,7 +14,7 @@ export default function CityLinks({ cities, heading = "Browse open mats by city"
               href={`/open-mats/${c.slug}`}
               className="inline-block rounded-full border border-border bg-surface px-3 py-1.5 text-sm hover:border-accent hover:text-accent"
             >
-              {c.city}, {c.state}{" "}
+              {c.label}{" "}
               <span className="text-dim">({c.listings.length})</span>
             </Link>
           </li>

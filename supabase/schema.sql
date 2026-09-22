@@ -59,13 +59,16 @@ create table if not exists listings (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   city text not null,
-  state text not null,
+  state text not null,          -- US state code; free-text region (or '') elsewhere
+  country text not null default 'US',  -- ISO 3166-1 alpha-2
   address text not null,
   phone text,
+  website text,
   day text not null,
   time text not null,
   gi gi_type not null default 'gi_nogi',
-  fee_cents integer,            -- null = varies / ask the gym, 0 = free, >0 = fee in cents
+  fee_cents integer,
+  currency text not null default 'USD',            -- null = varies / ask the gym, 0 = free, >0 = fee in cents
   fee_note text,                 -- human-readable, e.g. "$10 for non-members"
   visitor_policy visitor_policy not null default 'open',
   policy_note text,
@@ -83,7 +86,8 @@ create index if not exists listings_status_idx on listings (status);
 -- blocks exact duplicates (and lets supabase/seed.sql re-run safely) while
 -- still allowing one gym to list open mats on several days / times
 drop index if exists listings_name_city_key;
-create unique index if not exists listings_name_city_day_time_key on listings (name, city, day, time);
+drop index if exists listings_name_city_day_time_key;
+create unique index if not exists listings_name_city_country_day_time_key on listings (name, city, country, day, time);
 
 alter table listings enable row level security;
 

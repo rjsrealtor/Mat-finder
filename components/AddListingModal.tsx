@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { COUNTRIES, CURRENCIES, defaultCurrency, normalizeWebsite } from "@/lib/location";
 import type { GiType, ListingStatus, ListingWithRating, VisitorPolicy } from "@/lib/types";
 
 // 15-minute increments across a full day, e.g. "12:00 AM", "12:15 AM", … "11:45 PM".
@@ -32,14 +33,17 @@ const empty = {
   name: "",
   city: "",
   state: "",
+  country: "US",
   address: "",
   phone: "",
+  website: "",
   day: "Sunday",
   startTime: "10:00 AM",
   endTime: "12:00 PM",
   gi: "gi_nogi" as GiType,
   feeType: "free" as "free" | "fee" | "varies",
   feeAmount: "",
+  currency: "USD",
   feeNote: "",
   visitorPolicy: "open" as VisitorPolicy,
   policyNote: "",
@@ -54,13 +58,16 @@ function formFromListing(l: ListingWithRating): typeof empty {
     name: l.name,
     city: l.city,
     state: l.state,
+    country: l.country || "US",
     address: l.address,
     phone: l.phone ?? "",
+    website: l.website ?? "",
     day: l.day,
     timeText: l.time,
     gi: l.gi,
     feeType: l.fee_cents === 0 ? "free" : l.fee_cents == null ? "varies" : "fee",
     feeAmount: l.fee_cents ? String(l.fee_cents / 100) : "",
+    currency: l.currency || defaultCurrency(l.country || "US"),
     feeNote: l.fee_note ?? "",
     visitorPolicy: l.visitor_policy,
     policyNote: l.policy_note ?? "",
@@ -101,8 +108,10 @@ export default function AddListingModal({
 
   async function submit() {
     const hasTime = editing ? Boolean(form.timeText.trim()) : Boolean(form.startTime && form.endTime);
-    if (!form.name.trim() || !form.city.trim() || !form.state.trim() || !form.address.trim() || !form.day.trim() || !hasTime) {
-      setError("Please fill in name, city, state, address, day and time.");
+    const isUS = form.country === "US";
+    // A US state is required (2-letter code); elsewhere the region is optional.
+    if (!form.name.trim() || !form.city.trim() || (isUS && !form.state.trim()) || !form.address.trim() || !form.day.trim() || !hasTime) {
+      setError(`Please fill in name, city, ${isUS ? "state, " : ""}address, day and time.`);
       return;
     }
     setBusy(true);
@@ -127,13 +136,16 @@ export default function AddListingModal({
     const fields = {
       name: form.name.trim(),
       city: form.city.trim(),
-      state: form.state.trim().toUpperCase(),
+      state: isUS ? form.state.trim().toUpperCase() : form.state.trim(),
+      country: form.country,
       address: form.address.trim(),
       phone: form.phone.trim() || null,
+      website: normalizeWebsite(form.website),
       day: form.day.trim(),
       time: editing ? form.timeText.trim() : `${form.startTime} – ${form.endTime}`,
       gi: form.gi,
       fee_cents,
+      currency: form.currency,
       fee_note: form.feeNote.trim() || null,
       visitor_policy: form.visitorPolicy,
       policy_note: form.policyNote.trim() || null,
@@ -205,8 +217,30 @@ export default function AddListingModal({
             <input className={inputClass} value={form.city} onChange={(e) => set("city", e.target.value)} />
           </div>
           <div className="flex flex-col gap-1">
-            <label className={labelClass}>State</label>
-            <input className={inputClass} value={form.state} onChange={(e) => set("state", e.target.value)} maxLength={2} />
+            <label className={labelClass}>{form.country === "US" ? "State" : "State / region (optional)"}</label>
+            <input
+              className={inputClass}
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+              maxLength={form.country === "US" ? 2 : 60}
+              placeholder={form.country === "US" ? "CA" : "e.g. England, São Paulo"}
+            />
+          </div>
+          <div className="flex flex-col gap-1 col-span-2">
+            <label className={labelClass}>Country</label>
+            <select
+              className={inputClass}
+              value={form.country}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, country: e.target.value, currency: defaultCurrency(e.target.value) }))
+              }
+            >
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="flex flex-col gap-1 col-span-2">
             <label className={labelClass}>Address</label>
@@ -220,6 +254,16 @@ export default function AddListingModal({
               placeholder="e.g. (714) 555-0123"
               value={form.phone}
               onChange={(e) => set("phone", e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-1 col-span-2">
+            <label className={labelClass}>Website (optional)</label>
+            <input
+              className={inputClass}
+              inputMode="url"
+              placeholder="e.g. mygym.com"
+              value={form.website}
+              onChange={(e) => set("website", e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -299,14 +343,28 @@ export default function AddListingModal({
 
           {form.feeType === "fee" && (
             <div className="flex flex-col gap-1">
-              <label className={labelClass}>Amount (USD)</label>
-              <input
-                className={inputClass}
-                placeholder="10"
-                inputMode="decimal"
-                value={form.feeAmount}
-                onChange={(e) => set("feeAmount", e.target.value)}
-              />
+              <label className={labelClass}>Amount</label>
+              <div className="flex gap-1.5">
+                <input
+                  className={`${inputClass} min-w-0 flex-1`}
+                  placeholder="10"
+                  inputMode="decimal"
+                  value={form.feeAmount}
+                  onChange={(e) => set("feeAmount", e.target.value)}
+                />
+                <select
+                  className={inputClass}
+                  value={form.currency}
+                  onChange={(e) => set("currency", e.target.value)}
+                  aria-label="Currency"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           )}
 
