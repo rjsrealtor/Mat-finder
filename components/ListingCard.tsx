@@ -2,6 +2,7 @@
 
 import StarRating from "./StarRating";
 import { formatMoney, placeLabel } from "@/lib/location";
+import { formatMiles } from "@/lib/geo";
 import type { ListingWithRating } from "@/lib/types";
 
 export const GI_LABEL: Record<string, string> = {
@@ -28,10 +29,13 @@ export default function ListingCard({
   onEdit,
   onDelete,
   onOpen,
+  distance = null,
 }: {
   listing: ListingWithRating;
   /** Opens the full details + reviews view. */
   onOpen: (listing: ListingWithRating) => void;
+  /** Miles from the visitor, when "Near me" is on. */
+  distance?: number | null;
   onRate: (listing: ListingWithRating) => void;
   onReport: (listing: ListingWithRating) => void;
   /** Admin-only actions; buttons are hidden when these aren't passed. */
@@ -63,6 +67,7 @@ export default function ListingCard({
           <h3 className="text-base leading-tight">{listing.name}</h3>
           <p className="text-sm text-dim mt-0.5">
             {placeLabel(listing)}
+            {distance !== null && <span className="text-accent font-semibold"> · {formatMiles(distance)}</span>}
           </p>
         </div>
         {isClosed && (

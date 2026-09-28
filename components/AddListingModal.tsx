@@ -151,12 +151,34 @@ export default function AddListingModal({
       policy_note: form.policyNote.trim() || null,
     };
 
+    // Coordinates for "near me": look them up for new listings, or when the location changed.
+    const moved =
+      !listing ||
+      listing.lat == null ||
+      listing.address !== fields.address ||
+      listing.city !== fields.city ||
+      listing.state !== fields.state ||
+      listing.country !== fields.country;
+    let coords: { lat: number | null; lng: number | null } = { lat: listing?.lat ?? null, lng: listing?.lng ?? null };
+    if (moved) {
+      try {
+        const res = await fetch(
+          "/api/geocode?" +
+            new URLSearchParams({ address: fields.address, city: fields.city, state: fields.state, country: fields.country })
+        );
+        const hit = await res.json();
+        coords = { lat: hit.lat ?? null, lng: hit.lng ?? null };
+      } catch {
+        coords = { lat: null, lng: null }; // listing still saves; it just won't show up in "near me"
+      }
+    }
+
     let saveError: string | null = null;
     if (listing) {
       // RLS only lets admins update; a non-admin gets 0 rows back rather than an error.
       const { data, error } = await supabase
         .from("listings")
-        .update({ ...fields, status: form.status, updated_at: new Date().toISOString() })
+        .update({ ...fields, ...coords, status: form.status, updated_at: new Date().toISOString() })
         .eq("id", listing.id)
         .select("id");
       if (error) saveError = error.message;
@@ -164,6 +186,7 @@ export default function AddListingModal({
     } else {
       const { error } = await supabase.from("listings").insert({
         ...fields,
+        ...coords,
         status: "active",
         source: "community",
         created_by: userRes.user.id,

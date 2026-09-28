@@ -9,6 +9,7 @@ import RateModal from "./RateModal";
 import ReportModal from "./ReportModal";
 import ListingDetailModal from "./ListingDetailModal";
 import { placeLabel, placeSearchText, regionLabel } from "@/lib/location";
+import { milesBetween, type LatLng } from "@/lib/geo";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -50,6 +51,12 @@ export default function ListingsApp({
   const [fee, setFee] = useState<FeeFilter>("any");
   const [minRating, setMinRating] = useState(0);
   const [showFlagged, setShowFlagged] = useState(false);
+
+  // "Near me": the visitor's location (only after they tap the button) and a max distance.
+  const [here, setHere] = useState<LatLng | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
+  const [radius, setRadius] = useState(50);
 
   const [addOpen, setAddOpen] = useState(false);
   const [rateTarget, setRateTarget] = useState<ListingWithRating | null>(null);
@@ -117,9 +124,38 @@ export default function ListingsApp({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  function findNearMe() {
+    if (!("geolocation" in navigator)) {
+      setLocError("Your browser can't share your location.");
+      return;
+    }
+    setLocating(true);
+    setLocError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        setLocError(
+          err.code === err.PERMISSION_DENIED
+            ? "Location is turned off for this site. Allow location in your browser settings, or search by city instead."
+            : "Couldn't get your location. Try again, or search by city instead."
+        );
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 }
+    );
+  }
+
+  const distanceTo = useCallback(
+    (l: ListingWithRating) => (here && l.lat != null && l.lng != null ? milesBetween(here, { lat: l.lat, lng: l.lng }) : null),
+    [here]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return listings.filter((l) => {
+    const matches = listings.filter((l) => {
       const flagged = l.status === "closed" || l.visitor_policy === "members_only";
       if (flagged && !showFlagged) return false;
       if (q && !listingSearchText(l).includes(q)) return false;
@@ -128,9 +164,16 @@ export default function ListingsApp({
       if (fee === "free" && l.fee_cents !== 0) return false;
       if (fee === "fee" && !(typeof l.fee_cents === "number" && l.fee_cents > 0)) return false;
       if (minRating > 0 && l.rating_avg < minRating) return false;
+      if (here && radius > 0) {
+        const d = distanceTo(l);
+        if (d === null || d > radius) return false;
+      }
       return true;
     });
-  }, [listings, search, day, gi, fee, minRating, showFlagged]);
+    // Nearest first once we know where the visitor is.
+    if (here) matches.sort((a, b) => (distanceTo(a) ?? Infinity) - (distanceTo(b) ?? Infinity));
+    return matches;
+  }, [listings, search, day, gi, fee, minRating, showFlagged, here, radius, distanceTo]);
 
   // Same admin check as Navbar; the database enforces it too (RLS), this only toggles the buttons.
   useEffect(() => {
@@ -205,6 +248,31 @@ export default function ListingsApp({
             )}
           </div>
 
+          <button
+            onClick={here ? () => setHere(null) : findNearMe}
+            disabled={locating}
+            className={`rounded-lg border px-3 py-2 text-sm font-semibold disabled:opacity-60 ${
+              here ? "border-accent bg-accent text-accentInk" : "border-accent text-accent bg-surface"
+            }`}
+          >
+            {locating ? "Locating…" : here ? "📍 Near me ✕" : "📍 Near me"}
+          </button>
+
+          {here && (
+            <select
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="rounded-lg border border-border bg-surface text-ink px-2.5 py-2 text-sm"
+              aria-label="Distance"
+            >
+              <option value={10}>Within 10 mi</option>
+              <option value={25}>Within 25 mi</option>
+              <option value={50}>Within 50 mi</option>
+              <option value={100}>Within 100 mi</option>
+              <option value={0}>Any distance</option>
+            </select>
+          )}
+
           <select
             value={day}
             onChange={(e) => setDay(e.target.value)}
@@ -267,8 +335,18 @@ export default function ListingsApp({
       <section className="py-6">
         {loading && <p className="text-dim text-sm">Loading listings…</p>}
         {loadError && <p className="text-danger text-sm">{loadError}</p>}
+        {locError && <p className="text-danger text-sm mb-3">{locError}</p>}
+        {here && !loading && filtered.length > 0 && (
+          <p className="text-dim text-sm mb-3">
+            {filtered.length} open {filtered.length === 1 ? "mat" : "mats"} {radius > 0 ? `within ${radius} miles` : ""}, nearest first.
+          </p>
+        )}
         {!loading && !loadError && filtered.length === 0 && (
-          <p className="text-dim text-sm">No open mats match those filters yet.</p>
+          <p className="text-dim text-sm">
+            {here && radius > 0
+              ? `No open mats within ${radius} miles yet — try a bigger distance, or add one you know about.`
+              : "No open mats match those filters yet."}
+          </p>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -279,6 +357,7 @@ export default function ListingsApp({
               onRate={(l) => requireAuth(() => setRateTarget(l))}
               onReport={(l) => requireAuth(() => setReportTarget(l))}
               onOpen={setDetailTarget}
+              distance={distanceTo(listing)}
               onEdit={isAdmin ? setEditTarget : undefined}
               onDelete={isAdmin ? deleteListing : undefined}
             />

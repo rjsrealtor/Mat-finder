@@ -19,6 +19,9 @@ export interface Listing {
   address: string;
   phone: string | null;
   website: string | null;
+  /** Map coordinates (for "near me"); null if the address couldn't be located. */
+  lat: number | null;
+  lng: number | null;
   day: string;
   time: string;
   gi: GiType;
