@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchAllListings } from "@/lib/supabase/public";
-import { groupByCity, isVisitable, regionHeading } from "@/lib/cities";
+import { groupByCity, isVisitable, regionHeading, stateSlug } from "@/lib/cities";
 
 export const revalidate = 3600;
 
@@ -16,11 +16,12 @@ export default async function OpenMatsIndex() {
   const cities = groupByCity((await fetchAllListings()).filter(isVisitable));
 
   // US cities are filed under their state, everywhere else under the country.
-  const byRegion = new Map<string, { heading: string; country: string; cities: typeof cities }>();
+  const byRegion = new Map<string, { heading: string; country: string; href: string | null; cities: typeof cities }>();
   for (const c of cities) {
     const heading = regionHeading(c);
     const key = `${c.country}|${heading}`;
-    const group = byRegion.get(key) ?? { heading, country: c.country, cities: [] };
+    const href = c.country === "US" ? `/open-mats/state/${stateSlug(c.state)}` : null;
+    const group = byRegion.get(key) ?? { heading, country: c.country, href, cities: [] };
     group.cities.push(c);
     byRegion.set(key, group);
   }
@@ -47,7 +48,13 @@ export default async function OpenMatsIndex() {
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {regions.map((r) => (
           <section key={`${r.country}|${r.heading}`}>
-            <h2 className="text-lg mb-2">{r.heading}</h2>
+            <h2 className="text-lg mb-2">
+              {r.href ? (
+                <Link href={r.href} className="hover:text-accent hover:underline">{r.heading}</Link>
+              ) : (
+                r.heading
+              )}
+            </h2>
             <ul className="flex flex-col gap-1.5">
               {r.cities.map((c) => (
                 <li key={c.slug}>

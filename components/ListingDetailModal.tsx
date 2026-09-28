@@ -5,6 +5,7 @@ import StarRating from "./StarRating";
 import { createClient } from "@/lib/supabase/client";
 import { GI_LABEL, feeLabel, telHref } from "./ListingCard";
 import { placeLabel, websiteLabel } from "@/lib/location";
+import { gymSlug } from "@/lib/cities";
 import type { ListingWithRating } from "@/lib/types";
 
 type Review = {
@@ -122,7 +123,10 @@ export default function ListingDetailModal({
           <div>
             <h2 className="text-xl leading-tight">{listing.name}</h2>
             <p className="text-sm text-dim mt-0.5">
-              {placeLabel(listing)}
+              {placeLabel(listing)} ·{" "}
+              <a href={`/gym/${gymSlug(listing)}`} className="text-accent hover:underline">
+                Gym page
+              </a>
             </p>
             {listing.status === "closed" && (
               <span className="inline-block mt-2 text-xs font-semibold px-2 py-1 rounded-full bg-dangerBg text-danger">
