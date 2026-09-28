@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Oswald, Work_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import ServiceWorker from "@/components/ServiceWorker";
 import { SITE_URL } from "@/lib/cities";
 
 const oswald = Oswald({
@@ -34,6 +35,15 @@ export const metadata: Metadata = {
     title: "Mat Finder — free BJJ open mats near you",
     description,
   },
+  // Home-screen app on iPhone: full screen, with its own name.
+  appleWebApp: { capable: true, title: "Mat Finder", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#eef1ef" },
+    { media: "(prefers-color-scheme: dark)", color: "#101613" },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-[family-name:var(--font-worksans)] min-h-screen">
         <Navbar />
         {children}
+        <ServiceWorker />
       </body>
     </html>
   );

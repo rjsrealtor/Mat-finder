@@ -96,6 +96,17 @@ export default function AccountPage() {
           {busy ? "Saving…" : "Save"}
         </button>
       </form>
+
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut();
+          router.push("/");
+          router.refresh();
+        }}
+        className="mt-8 text-sm text-dim hover:text-ink border border-border rounded-lg px-3 py-1.5"
+      >
+        Sign out
+      </button>
     </div>
   );
 }

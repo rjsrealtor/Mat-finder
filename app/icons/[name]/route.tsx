@@ -1,0 +1,25 @@
+import { ImageResponse } from "next/og";
+import { AppIcon } from "@/lib/brand";
+
+// Icons referenced by app/manifest.ts: /icons/icon-192.png, /icons/icon-512.png,
+// /icons/maskable-512.png (extra padding so Android launchers can crop it).
+const ICONS: Record<string, { size: number; padding?: number }> = {
+  "icon-192.png": { size: 192 },
+  "icon-512.png": { size: 512 },
+  "maskable-512.png": { size: 512, padding: 0.2 },
+};
+
+export const dynamic = "force-static";
+
+export function generateStaticParams() {
+  return Object.keys(ICONS).map((name) => ({ name }));
+}
+
+export function GET(_req: Request, { params }: { params: { name: string } }) {
+  const icon = ICONS[params.name];
+  if (!icon) return new Response("Not found", { status: 404 });
+  return new ImageResponse(<AppIcon size={icon.size} padding={icon.padding} />, {
+    width: icon.size,
+    height: icon.size,
+  });
+}
