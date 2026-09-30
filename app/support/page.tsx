@@ -53,6 +53,23 @@ export default function SupportPage() {
           </div>
         ))}
       </div>
+      <section id="community-guidelines" className="mt-10">
+        <h2 className="text-xl mb-2">Community guidelines</h2>
+        <p className="text-sm text-dim mb-2">
+          Listings and reviews are written by the grappling community. To keep Mat Finder useful and respectful, don&apos;t post:
+        </p>
+        <ul className="list-disc pl-5 text-sm text-dim flex flex-col gap-1">
+          <li>Harassment, hate speech, threats, or personal attacks</li>
+          <li>Sexual, violent, or otherwise objectionable content</li>
+          <li>Spam, advertising, or fake listings and reviews</li>
+          <li>Other people&apos;s private information</li>
+        </ul>
+        <p className="text-sm text-dim mt-2">
+          There&apos;s zero tolerance for abusive content. Tap &ldquo;Report review&rdquo; on any review, or email us — we
+          review reports within 24 hours, remove content that breaks these rules, and remove accounts that post it.
+        </p>
+      </section>
+
       <p className="text-sm text-dim mt-10">
         <Link href="/privacy" className="text-accent hover:underline">Privacy Policy</Link>
       </p>

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { GI_LABEL, feeLabel, telHref } from "./ListingCard";
 import { placeLabel, websiteLabel } from "@/lib/location";
 import { gymSlug } from "@/lib/cities";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import type { ListingWithRating } from "@/lib/types";
 
 type Review = {
@@ -172,6 +173,15 @@ export default function ListingDetailModal({
                   </span>
                 </div>
                 <p className="text-sm mt-1.5 whitespace-pre-line">{r.comment}</p>
+                {/* Required for user-generated content: a way to flag abusive reviews for removal. */}
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`Report review ${r.id}`)}&body=${encodeURIComponent(
+                    `I'm reporting this review on ${listing.name} (${listing.city}) as inappropriate:\n\n"${r.comment}"\n\nReason: `
+                  )}`}
+                  className="inline-block text-xs text-dim hover:text-danger mt-1.5"
+                >
+                  Report review
+                </a>
               </li>
             ))}
           </ul>
