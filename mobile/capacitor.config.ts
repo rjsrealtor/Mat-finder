@@ -13,23 +13,23 @@ const config: CapacitorConfig = {
     // Links to other sites (gym websites, Google Maps) open outside the app.
     allowNavigation: ["www.matfinderbjj.com", "matfinderbjj.com"],
   },
-  backgroundColor: "#101613",
+  backgroundColor: "#ffffff",
   ios: {
     contentInset: "automatic",
     limitsNavigationsToAppBoundDomains: false,
   },
   android: {
-    backgroundColor: "#101613",
+    backgroundColor: "#ffffff",
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 800,
-      backgroundColor: "#101613",
+      backgroundColor: "#ffffff",
       showSpinner: false,
     },
     StatusBar: {
-      style: "DARK",
-      backgroundColor: "#101613",
+      style: "LIGHT",
+      backgroundColor: "#ffffff",
     },
   },
 };

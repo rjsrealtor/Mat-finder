@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { BRAND_BG } from "@/lib/brand";
 
 // Makes the site installable ("Add to Home Screen" / "Install app").
 export default function manifest(): MetadataRoute.Manifest {
@@ -12,8 +11,8 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: BRAND_BG,
-    theme_color: BRAND_BG,
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     categories: ["sports", "health", "lifestyle"],
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

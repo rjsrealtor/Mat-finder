@@ -11,7 +11,16 @@ export const BRAND_GOLD = "#e2b155";
  * left empty around the artwork — maskable Android icons need ~20% so
  * launchers can crop to a circle.
  */
-export function AppIcon({ size, padding = 0.08 }: { size: number; padding?: number }) {
+export function AppIcon({
+  size,
+  padding = 0.08,
+  background = BRAND_BG,
+}: {
+  size: number;
+  padding?: number;
+  /** Tile colour behind the green disc (white for the app launch screen). */
+  background?: string;
+}) {
   const art = Math.round(size * (1 - padding * 2));
   return (
     <div
@@ -21,7 +30,7 @@ export function AppIcon({ size, padding = 0.08 }: { size: number; padding?: numb
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: BRAND_BG,
+        background,
       }}
     >
       <svg width={art} height={art} viewBox="0 0 100 100" fill="none">
