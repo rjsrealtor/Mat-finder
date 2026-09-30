@@ -15,6 +15,25 @@ export default function AccountPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function deleteAccount() {
+    const typed = window.prompt(
+      "This permanently deletes your account, display name, ratings, reviews and reports. Open mats you added stay listed.\n\nType DELETE to confirm."
+    );
+    if (typed?.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    setError(null);
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) {
+      setDeleting(false);
+      setError(`Couldn't delete your account: ${error.message}`);
+      return;
+    }
+    await supabase.auth.signOut();
+    router.push("/?account=deleted");
+    router.refresh();
+  }
 
   useEffect(() => {
     async function load() {
@@ -107,6 +126,20 @@ export default function AccountPage() {
       >
         Sign out
       </button>
+
+      <section className="mt-12 pt-6 border-t border-border">
+        <h2 className="text-lg mb-1">Delete account</h2>
+        <p className="text-sm text-dim mb-3">
+          Permanently deletes your account, display name, ratings, reviews and reports. This can&apos;t be undone.
+        </p>
+        <button
+          onClick={deleteAccount}
+          disabled={deleting}
+          className="text-sm font-semibold text-danger border border-danger rounded-lg px-3 py-1.5 disabled:opacity-60"
+        >
+          {deleting ? "Deleting…" : "Delete my account"}
+        </button>
+      </section>
     </div>
   );
 }

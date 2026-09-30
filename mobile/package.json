@@ -1,0 +1,23 @@
+{
+  "name": "mat-finder-mobile",
+  "private": true,
+  "description": "iOS and Android apps for Mat Finder (Capacitor shell around https://www.matfinderbjj.com)",
+  "scripts": {
+    "sync": "cap sync",
+    "assets": "capacitor-assets generate --ios --android --iconBackgroundColor '#101613' --iconBackgroundColorDark '#101613' --splashBackgroundColor '#101613' --splashBackgroundColorDark '#101613'",
+    "ios": "cap open ios",
+    "android": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/geolocation": "^8.2.2",
+    "@capacitor/ios": "^8.5.2",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.2"
+  }
+}

@@ -3,6 +3,7 @@ import { Oswald, Work_Sans } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ServiceWorker from "@/components/ServiceWorker";
+import Footer from "@/components/Footer";
 import { SITE_URL } from "@/lib/cities";
 
 const oswald = Oswald({
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="font-[family-name:var(--font-worksans)] min-h-screen">
         <Navbar />
         {children}
+        <Footer />
         <ServiceWorker />
       </body>
     </html>

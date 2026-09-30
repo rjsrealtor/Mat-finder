@@ -15,6 +15,8 @@ function detectPlatform(): Platform {
 }
 
 export function isStandalone() {
+  // Inside the App Store / Google Play app there's nothing to install.
+  if ((window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.()) return true;
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
     (navigator as Navigator & { standalone?: boolean }).standalone === true

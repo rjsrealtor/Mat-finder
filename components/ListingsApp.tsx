@@ -10,6 +10,7 @@ import ReportModal from "./ReportModal";
 import ListingDetailModal from "./ListingDetailModal";
 import { placeLabel, placeSearchText, regionLabel } from "@/lib/location";
 import { milesBetween, type LatLng } from "@/lib/geo";
+import { getLocation, LocationDeniedError } from "@/lib/native";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -124,28 +125,20 @@ export default function ListingsApp({
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  function findNearMe() {
-    if (!("geolocation" in navigator)) {
-      setLocError("Your browser can't share your location.");
-      return;
-    }
+  async function findNearMe() {
     setLocating(true);
     setLocError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setHere({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      (err) => {
-        setLocating(false);
-        setLocError(
-          err.code === err.PERMISSION_DENIED
-            ? "Location is turned off for this site. Allow location in your browser settings, or search by city instead."
-            : "Couldn't get your location. Try again, or search by city instead."
-        );
-      },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10 * 60 * 1000 }
-    );
+    try {
+      setHere(await getLocation());
+    } catch (err) {
+      setLocError(
+        err instanceof LocationDeniedError
+          ? "Location is turned off for Mat Finder. Allow location in your settings, or search by city instead."
+          : "Couldn't get your location. Try again, or search by city instead."
+      );
+    } finally {
+      setLocating(false);
+    }
   }
 
   const distanceTo = useCallback(

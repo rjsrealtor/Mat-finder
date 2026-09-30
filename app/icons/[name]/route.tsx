@@ -7,6 +7,9 @@ const ICONS: Record<string, { size: number; padding?: number }> = {
   "icon-192.png": { size: 192 },
   "icon-512.png": { size: 512 },
   "maskable-512.png": { size: 512, padding: 0.2 },
+  // Source art for the iOS / Android app icons and launch screens (mobile/assets).
+  "icon-1024.png": { size: 1024, padding: 0.06 },
+  "splash-2732.png": { size: 2732, padding: 0.4 },
 };
 
 export const dynamic = "force-static";

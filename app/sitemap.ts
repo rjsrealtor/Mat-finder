@@ -18,6 +18,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${SITE_URL}/open-mats`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
     { url: `${SITE_URL}/app`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${SITE_URL}/support`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.2 },
     ...groupByState(cities).map((s) => ({
       url: `${SITE_URL}/open-mats/state/${s.slug}`,
       lastModified: lastModified(s.cities.flatMap((c) => c.listings)),
