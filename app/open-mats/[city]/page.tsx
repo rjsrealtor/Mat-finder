@@ -83,14 +83,14 @@ function describe(c: CityGroup) {
   const open = c.listings.filter(isVisitable);
   const days = Array.from(new Set(open.map((l) => l.day))).slice(0, 3).join(", ");
   const count = open.length === 1 ? "1 BJJ open mat" : `${open.length} BJJ open mats`;
-  return `${count} in ${c.label}${days ? ` — ${days}` : ""}. Days, times, gi or no-gi, drop-in fees and visitor rules, kept up to date by local grapplers.`;
+  return `${count} in ${c.label}${days ? ` — ${days}` : ""}. Jiu-jitsu open mat days, times, gi or no-gi, drop-in fees and visitor rules, kept up to date by local grapplers.`;
 }
 
 export async function generateMetadata({ params }: { params: { city: string } }): Promise<Metadata> {
   const found = await getCity(params.city);
   if (!found) return { title: "City not found | Mat Finder" };
   const { city } = found;
-  const title = `BJJ Open Mats in ${city.label} | Mat Finder`;
+  const title = `BJJ & Jiu-Jitsu Open Mats in ${city.label} | Mat Finder`;
   const description = describe(city);
   return {
     title,

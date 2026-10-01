@@ -23,7 +23,7 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "BJJ Open Mats Near You | Mat Finder",
+  title: "BJJ Open Mat Finder — Jiu-Jitsu Open Mats Near You",
   description,
   openGraph: {
     type: "website",
