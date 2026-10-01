@@ -65,7 +65,7 @@ export default function SupportPage() {
           <li>Other people&apos;s private information</li>
         </ul>
         <p className="text-sm text-dim mt-2">
-          There&apos;s zero tolerance for abusive content. Tap &ldquo;Report review&rdquo; on any review, or email us — we
+          There&apos;s zero tolerance for abusive content. Tap &ldquo;Block user&rdquo; on a review to hide that person&apos;s reviews right away, or &ldquo;Report review&rdquo; to flag it to us — we
           review reports within 24 hours, remove content that breaks these rules, and remove accounts that post it.
         </p>
       </section>

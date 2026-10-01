@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getBlocked, setBlocked } from "@/lib/blocked";
 
 export default function AccountPage() {
   const supabase = createClient();
@@ -16,6 +17,8 @@ export default function AccountPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [blockedCount, setBlockedCount] = useState(0);
+  useEffect(() => setBlockedCount(getBlocked().length), []);
 
   async function deleteAccount() {
     const typed = window.prompt(
@@ -126,6 +129,26 @@ export default function AccountPage() {
       >
         Sign out
       </button>
+
+      <section className="mt-12 pt-6 border-t border-border">
+        <h2 className="text-lg mb-1">Blocked users</h2>
+        <p className="text-sm text-dim mb-3">
+          {blockedCount === 0
+            ? "You haven't blocked anyone. Use “Block user” on a review to hide that person's reviews."
+            : `You've blocked ${blockedCount} ${blockedCount === 1 ? "person" : "people"}. Their reviews are hidden on this device.`}
+        </p>
+        {blockedCount > 0 && (
+          <button
+            onClick={() => {
+              setBlocked([]);
+              setBlockedCount(0);
+            }}
+            className="text-sm text-dim hover:text-ink border border-border rounded-lg px-3 py-1.5"
+          >
+            Unblock everyone
+          </button>
+        )}
+      </section>
 
       <section className="mt-12 pt-6 border-t border-border">
         <h2 className="text-lg mb-1">Delete account</h2>

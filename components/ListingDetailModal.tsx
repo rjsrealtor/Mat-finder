@@ -7,10 +7,12 @@ import { GI_LABEL, feeLabel, telHref } from "./ListingCard";
 import { placeLabel, websiteLabel } from "@/lib/location";
 import { gymSlug } from "@/lib/cities";
 import { SUPPORT_EMAIL } from "@/lib/contact";
+import { blockUser, getBlocked } from "@/lib/blocked";
 import type { ListingWithRating } from "@/lib/types";
 
 type Review = {
   id: string;
+  user_id: string;
   stars: number;
   comment: string | null;
   created_at: string;
@@ -53,7 +55,7 @@ export default function ListingDetailModal({
   useEffect(() => {
     supabase
       .from("ratings")
-      .select("id, stars, comment, created_at, profiles(display_name)")
+      .select("id, user_id, stars, comment, created_at, profiles(display_name)")
       .eq("listing_id", listing.id)
       .order("created_at", { ascending: false })
       .then(({ data, error }) => {
@@ -76,7 +78,17 @@ export default function ListingDetailModal({
   }
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(listing.address)}`;
-  const written = reviews?.filter((r) => r.comment) ?? [];
+  const [blocked, setBlockedState] = useState<string[]>([]);
+  useEffect(() => setBlockedState(getBlocked()), []);
+  const written = reviews?.filter((r) => r.comment && !blocked.includes(r.user_id)) ?? [];
+  const hiddenCount = reviews?.filter((r) => r.comment && blocked.includes(r.user_id)).length ?? 0;
+
+  function block(r: Review) {
+    const name = r.profiles?.display_name || "this user";
+    if (!window.confirm(`Block ${name}? You won't see their reviews anymore. You can unblock people from your Account page.`)) return;
+    blockUser(r.user_id);
+    setBlockedState(getBlocked());
+  }
 
   const rows: [string, React.ReactNode][] = [
     ["When", `${listing.day} · ${listing.time}`],
@@ -182,9 +194,21 @@ export default function ListingDetailModal({
                 >
                   Report review
                 </a>
+                <button
+                  type="button"
+                  onClick={() => block(r)}
+                  className="text-xs text-dim hover:text-danger mt-1.5 ml-4"
+                >
+                  Block user
+                </button>
               </li>
             ))}
           </ul>
+          {hiddenCount > 0 && (
+            <p className="text-xs text-dim">
+              {hiddenCount} review{hiddenCount === 1 ? "" : "s"} hidden from people you blocked.
+            </p>
+          )}
         </section>
 
         <div className="flex flex-wrap justify-end gap-2 pt-1">
