@@ -20,13 +20,13 @@ function describe(s: StateGroup) {
   const top = [...s.cities].sort((a, b) => b.listings.length - a.listings.length).slice(0, 4).map((c) => c.city);
   const mats = s.listingCount === 1 ? "1 BJJ open mat" : `${s.listingCount} BJJ open mats`;
   const cities = s.cities.length === 1 ? "1 city" : `${s.cities.length} cities`;
-  return `${mats} across ${cities} in ${s.name}${top.length ? `, including ${top.join(", ")}` : ""}. Days, times, gi or no-gi, drop-in fees and visitor rules.`;
+  return `${mats} across ${cities} in ${s.name}${top.length ? `, including ${top.join(", ")}` : ""}. Jiu-jitsu open mat days, times, gi or no-gi, drop-in fees and visitor rules.`;
 }
 
 export async function generateMetadata({ params }: { params: { state: string } }): Promise<Metadata> {
   const s = await getState(params.state);
   if (!s) return { title: "State not found | Mat Finder" };
-  const title = `BJJ Open Mats in ${s.name} | Mat Finder`;
+  const title = `BJJ & Jiu-Jitsu Open Mats in ${s.name} | Mat Finder`;
   const description = describe(s);
   return {
     title,
