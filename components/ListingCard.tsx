@@ -111,15 +111,15 @@ export default function ListingCard({
         )}
       </p>
 
-      <div className="flex items-center justify-between mt-1 pt-3 border-t border-border">
-        <span className="inline-flex items-center gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mt-1 pt-3 border-t border-border">
+        <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
           <StarRating value={listing.rating_avg} count={listing.rating_count} />
           <span className="text-xs text-accent font-semibold">
             {listing.rating_count > 0 ? "Read reviews" : "Details"}
           </span>
         </span>
         {/* Action buttons shouldn't also open the details view. */}
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+        <div className="flex gap-3 ml-auto" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => onRate(listing)}
             className="text-xs font-semibold text-accent hover:underline"
