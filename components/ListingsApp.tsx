@@ -11,6 +11,7 @@ import ListingDetailModal from "./ListingDetailModal";
 import { placeLabel, placeSearchText, regionLabel } from "@/lib/location";
 import { milesBetween, type LatLng } from "@/lib/geo";
 import { getLocation, LocationDeniedError } from "@/lib/native";
+import { maybeAskForReview } from "@/lib/review";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -373,7 +374,10 @@ export default function ListingsApp({
       {detailTarget && (
         <ListingDetailModal
           listing={detailTarget}
-          onClose={() => setDetailTarget(null)}
+          onClose={() => {
+            setDetailTarget(null);
+            maybeAskForReview();
+          }}
           onRate={(l) => requireAuth(() => setRateTarget(l))}
           onReport={(l) => requireAuth(() => setReportTarget(l))}
           onEdit={isAdmin ? setEditTarget : undefined}

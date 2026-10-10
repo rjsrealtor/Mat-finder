@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RateAppLink } from "./AppReview";
 
 export default function Footer() {
   return (
@@ -8,6 +9,7 @@ export default function Footer() {
         <Link href="/open-mats" className="hover:text-ink">Open mats by city</Link>
         <Link href="/support" className="hover:text-ink">Support</Link>
         <Link href="/privacy" className="hover:text-ink">Privacy</Link>
+        <RateAppLink />
       </div>
     </footer>
   );

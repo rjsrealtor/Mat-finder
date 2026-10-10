@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import ServiceWorker from "@/components/ServiceWorker";
 import Footer from "@/components/Footer";
+import { AppOpenTracker } from "@/components/AppReview";
 import { SITE_URL } from "@/lib/cities";
 
 const oswald = Oswald({
@@ -53,6 +54,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <Footer />
         <ServiceWorker />
+        <AppOpenTracker />
       </body>
     </html>
   );

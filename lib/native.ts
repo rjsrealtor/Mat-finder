@@ -15,7 +15,7 @@ type NativeGeolocation = {
 type CapacitorGlobal = {
   isNativePlatform?: () => boolean;
   getPlatform?: () => string;
-  Plugins?: { Geolocation?: NativeGeolocation };
+  Plugins?: { Geolocation?: NativeGeolocation; InAppReview?: { requestReview: () => Promise<void> } };
 };
 
 function capacitor(): CapacitorGlobal | undefined {
@@ -26,6 +26,16 @@ function capacitor(): CapacitorGlobal | undefined {
 /** True inside the App Store / Google Play app. */
 export function isNativeApp() {
   return Boolean(capacitor()?.isNativePlatform?.());
+}
+
+/** True in an app build that has Apple's / Google's native rating prompt (build 4+). */
+export function canRequestReview() {
+  return isNativeApp() && Boolean(capacitor()?.Plugins?.InAppReview);
+}
+
+/** Shows the native "Enjoying Mat Finder?" star prompt. The OS decides whether it actually appears. */
+export async function requestReview() {
+  await capacitor()?.Plugins?.InAppReview?.requestReview();
 }
 
 export class LocationDeniedError extends Error {}
