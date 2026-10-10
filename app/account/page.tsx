@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getBlocked, setBlocked } from "@/lib/blocked";
@@ -18,6 +19,7 @@ export default function AccountPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [blockedCount, setBlockedCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => setBlockedCount(getBlocked().length), []);
 
   async function deleteAccount() {
@@ -53,6 +55,8 @@ export default function AccountPage() {
         .eq("id", userRes.user.id)
         .single();
       setDisplayName(profile?.display_name ?? "");
+      const { data: admin } = await supabase.rpc("is_admin");
+      setIsAdmin(admin === true);
       setLoading(false);
     }
     load();
@@ -129,6 +133,18 @@ export default function AccountPage() {
       >
         Sign out
       </button>
+
+      {isAdmin && (
+        <section className="mt-12 pt-6 border-t border-border">
+          <h2 className="text-lg mb-1">Admin</h2>
+          <Link
+            href="/admin/accounts"
+            className="inline-block text-sm text-dim hover:text-ink border border-border rounded-lg px-3 py-1.5"
+          >
+            See all accounts
+          </Link>
+        </section>
+      )}
 
       <section className="mt-12 pt-6 border-t border-border">
         <h2 className="text-lg mb-1">Blocked users</h2>
