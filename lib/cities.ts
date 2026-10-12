@@ -81,6 +81,19 @@ export function gymSlug(l: { name: string; city: string; state: string; country?
   return country === "US" ? slugify(l.name, l.city, l.state) : slugify(l.name, l.city, l.state, country);
 }
 
+/**
+ * For a gym URL that no longer exists (the gym moved city, so its slug
+ * changed): the current gym whose name the old slug starts with. Longest name
+ * wins; returns null when that's ambiguous or nothing matches.
+ */
+export function findMovedGym(oldSlug: string, gyms: GymGroup[]): GymGroup | null {
+  const matches = gyms.filter((g) => oldSlug.startsWith(slugify(g.name) + "-"));
+  if (matches.length === 0) return null;
+  const longest = Math.max(...matches.map((g) => slugify(g.name).length));
+  const best = matches.filter((g) => slugify(g.name).length === longest);
+  return best.length === 1 ? best[0] : null;
+}
+
 export function groupByGym(listings: ListingWithRating[]): GymGroup[] {
   const groups = new Map<string, GymGroup>();
   for (const l of listings) {

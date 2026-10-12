@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import GymBadge from "@/components/GymBadge";
 import ListingsApp from "@/components/ListingsApp";
 import { fetchAllListings } from "@/lib/supabase/public";
-import { SITE_URL, groupByGym, stateSlug, type GymGroup } from "@/lib/cities";
+import { SITE_URL, findMovedGym, groupByGym, stateSlug, type GymGroup } from "@/lib/cities";
 import { websiteLabel } from "@/lib/location";
 import { STATE_NAMES } from "@/lib/us-states";
 
@@ -48,7 +48,12 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function GymPage({ params }: { params: { slug: string } }) {
   const g = await getGym(params.slug);
-  if (!g) notFound();
+  if (!g) {
+    // Old link from before the gym moved city: send it to the new page.
+    const moved = findMovedGym(params.slug, groupByGym(await fetchAllListings()));
+    if (moved) permanentRedirect(`/gym/${moved.slug}`);
+    notFound();
+  }
 
   const first = g.listings[0];
   const phone = g.listings.find((l) => l.phone)?.phone ?? null;
