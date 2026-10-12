@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import GymBadge from "@/components/GymBadge";
 import ListingsApp from "@/components/ListingsApp";
 import { fetchAllListings } from "@/lib/supabase/public";
 import { SITE_URL, groupByGym, stateSlug, type GymGroup } from "@/lib/cities";
@@ -156,6 +157,7 @@ export default async function GymPage({ params }: { params: { slug: string } }) 
             .
           </p>
         </section>
+        <GymBadge slug={g.slug} name={g.name} />
       </ListingsApp>
     </>
   );
