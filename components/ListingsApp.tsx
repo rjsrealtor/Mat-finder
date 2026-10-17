@@ -12,6 +12,7 @@ import { placeLabel, placeSearchText, regionLabel } from "@/lib/location";
 import { milesBetween, type LatLng } from "@/lib/geo";
 import { getLocation, LocationDeniedError } from "@/lib/native";
 import { maybeAskForReview } from "@/lib/review";
+import WeekendReminder from "./WeekendReminder";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -327,6 +328,7 @@ export default function ListingsApp({
       </section>
 
       <section className="py-6">
+        {!scope && <WeekendReminder />}
         {loading && <p className="text-dim text-sm">Loading listings…</p>}
         {loadError && <p className="text-danger text-sm">{loadError}</p>}
         {locError && <p className="text-danger text-sm mb-3">{locError}</p>}

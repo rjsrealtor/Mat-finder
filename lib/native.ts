@@ -12,10 +12,27 @@ type NativeGeolocation = {
   }>;
 };
 
+type NativeLocalNotifications = {
+  requestPermissions: () => Promise<{ display: string }>;
+  schedule: (opts: {
+    notifications: {
+      id: number;
+      title: string;
+      body: string;
+      schedule: { on: { weekday: number; hour: number; minute: number }; allowWhileIdle?: boolean };
+    }[];
+  }) => Promise<unknown>;
+  cancel: (opts: { notifications: { id: number }[] }) => Promise<void>;
+};
+
 type CapacitorGlobal = {
   isNativePlatform?: () => boolean;
   getPlatform?: () => string;
-  Plugins?: { Geolocation?: NativeGeolocation; InAppReview?: { requestReview: () => Promise<void> } };
+  Plugins?: {
+    Geolocation?: NativeGeolocation;
+    InAppReview?: { requestReview: () => Promise<void> };
+    LocalNotifications?: NativeLocalNotifications;
+  };
 };
 
 function capacitor(): CapacitorGlobal | undefined {
@@ -36,6 +53,42 @@ export function canRequestReview() {
 /** Shows the native "Enjoying Mat Finder?" star prompt. The OS decides whether it actually appears. */
 export async function requestReview() {
   await capacitor()?.Plugins?.InAppReview?.requestReview();
+}
+
+const WEEKEND_REMINDER_ID = 1001;
+
+/** True in an app build that can schedule local notifications (build 5+). */
+export function canScheduleReminders() {
+  return isNativeApp() && Boolean(capacitor()?.Plugins?.LocalNotifications);
+}
+
+/**
+ * Weekly "weekend open mats near you" reminder, Fridays at 5 PM local time.
+ * Local notification only — nothing is sent from a server. Returns false if
+ * the user declined notification permission.
+ */
+export async function enableWeekendReminder() {
+  const ln = capacitor()?.Plugins?.LocalNotifications;
+  if (!ln) return false;
+  const { display } = await ln.requestPermissions();
+  if (display !== "granted") return false;
+  await ln.cancel({ notifications: [{ id: WEEKEND_REMINDER_ID }] }).catch(() => {});
+  await ln.schedule({
+    notifications: [
+      {
+        id: WEEKEND_REMINDER_ID,
+        title: "Weekend open mats near you",
+        body: "See who's rolling Saturday and Sunday — tap to find an open mat.",
+        // Capacitor weekdays: 1 = Sunday … 6 = Friday
+        schedule: { on: { weekday: 6, hour: 17, minute: 0 }, allowWhileIdle: true },
+      },
+    ],
+  });
+  return true;
+}
+
+export async function disableWeekendReminder() {
+  await capacitor()?.Plugins?.LocalNotifications?.cancel({ notifications: [{ id: WEEKEND_REMINDER_ID }] });
 }
 
 export class LocationDeniedError extends Error {}
