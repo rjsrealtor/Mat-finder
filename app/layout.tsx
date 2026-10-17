@@ -39,6 +39,8 @@ export const metadata: Metadata = {
   },
   // Home-screen app on iPhone: full screen, with its own name.
   appleWebApp: { capable: true, title: "Mat Finder", statusBarStyle: "default" },
+  // Safari on iPhone shows an "Open in the App Store" banner for the native app.
+  itunes: { appId: "6817913033" },
 };
 
 export const viewport: Viewport = {
