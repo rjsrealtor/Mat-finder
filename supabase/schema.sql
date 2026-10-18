@@ -107,6 +107,7 @@ create table if not exists ratings (
   stars smallint not null check (stars between 1 and 5),
   comment text,
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   unique (listing_id, user_id)
 );
 
