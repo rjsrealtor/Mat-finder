@@ -94,6 +94,22 @@ export function findMovedGym(oldSlug: string, gyms: GymGroup[]): GymGroup | null
   return best.length === 1 ? best[0] : null;
 }
 
+/**
+ * For a gym URL whose gym was removed: the best page to send visitors to
+ * instead — the gym's city page if that city still has open mats, otherwise
+ * its state page. Returns a path, or null when nothing fits.
+ */
+export function removedGymFallback(oldSlug: string, listings: ListingWithRating[]): string | null {
+  const cities = groupByCity(listings).filter((c) => oldSlug.endsWith("-" + c.slug));
+  if (cities.length) {
+    const best = cities.reduce((a, b) => (b.slug.length > a.slug.length ? b : a));
+    return `/open-mats/${best.slug}`;
+  }
+  const code = oldSlug.slice(-2).toUpperCase();
+  const inState = listings.some((l) => (l.country || "US") === "US" && l.state.trim().toUpperCase() === code);
+  return inState ? `/open-mats/state/${stateSlug(code)}` : null;
+}
+
 export function groupByGym(listings: ListingWithRating[]): GymGroup[] {
   const groups = new Map<string, GymGroup>();
   for (const l of listings) {

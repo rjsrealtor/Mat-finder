@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import GymBadge from "@/components/GymBadge";
 import ListingsApp from "@/components/ListingsApp";
 import { fetchAllListings } from "@/lib/supabase/public";
-import { SITE_URL, findMovedGym, groupByGym, stateSlug, type GymGroup } from "@/lib/cities";
+import { SITE_URL, findMovedGym, groupByGym, removedGymFallback, stateSlug, type GymGroup } from "@/lib/cities";
 import { websiteLabel } from "@/lib/location";
 import { STATE_NAMES } from "@/lib/us-states";
 
@@ -50,8 +50,12 @@ export default async function GymPage({ params }: { params: { slug: string } }) 
   const g = await getGym(params.slug);
   if (!g) {
     // Old link from before the gym moved city: send it to the new page.
-    const moved = findMovedGym(params.slug, groupByGym(await fetchAllListings()));
+    const listings = await fetchAllListings();
+    const moved = findMovedGym(params.slug, groupByGym(listings));
     if (moved) permanentRedirect(`/gym/${moved.slug}`);
+    // Gym was removed: send the old link to its city (or state) page.
+    const fallback = removedGymFallback(params.slug, listings);
+    if (fallback) permanentRedirect(fallback);
     notFound();
   }
 
