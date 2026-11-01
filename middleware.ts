@@ -5,8 +5,18 @@ import { NextResponse, type NextRequest } from "next/server";
  * Refreshes the Supabase auth session cookie on every request so a
  * signed-in user's session doesn't silently expire between page loads.
  * Standard pattern for @supabase/ssr in the Next.js App Router.
+ *
+ * Visitors who aren't signed in (nearly all traffic, including search
+ * engine crawlers) have no Supabase auth cookie, so there is nothing to
+ * refresh — skip the round trip to Supabase for them. This keeps the
+ * site inside Vercel's free-tier CPU allowance.
  */
 export async function middleware(request: NextRequest) {
+  const hasSession = request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith("sb-") && name.includes("-auth-token"));
+  if (!hasSession) return NextResponse.next();
+
   let response = NextResponse.next({ request: { headers: request.headers } });
 
   const supabase = createServerClient(
@@ -37,6 +47,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons/|sitemap.xml|robots.txt|manifest.webmanifest|sw.js|opengraph-image|twitter-image|apple-icon|icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
