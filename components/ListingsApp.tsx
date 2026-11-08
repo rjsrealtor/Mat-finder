@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, Fragment } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import ListingCard from "./ListingCard";
@@ -13,6 +13,7 @@ import { milesBetween, type LatLng } from "@/lib/geo";
 import { getLocation, LocationDeniedError } from "@/lib/native";
 import { maybeAskForReview } from "@/lib/review";
 import WeekendReminder from "./WeekendReminder";
+import QuietPressureAd from "./QuietPressureAd";
 import type { ListingWithRating } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -346,9 +347,9 @@ export default function ListingsApp({
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((listing) => (
+          {filtered.map((listing, i) => (
+            <Fragment key={listing.id}>
             <ListingCard
-              key={listing.id}
               listing={listing}
               onRate={(l) => requireAuth(() => setRateTarget(l))}
               onReport={(l) => requireAuth(() => setReportTarget(l))}
@@ -357,6 +358,9 @@ export default function ListingsApp({
               onEdit={isAdmin ? setEditTarget : undefined}
               onDelete={isAdmin ? deleteListing : undefined}
             />
+            {/* Quiet Pressure ad: after the 3rd open mat, or after the last one when there are fewer. */}
+            {i === Math.min(2, filtered.length - 1) && <QuietPressureAd />}
+            </Fragment>
           ))}
         </div>
       </section>
