@@ -16,7 +16,7 @@ export default function QuietPressureAd() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/ads/quiet-pressure.jpg"
-        alt="White Quiet Pressure gi with red patches"
+        alt="White Quiet Pressure gi with white patches"
         width={640}
         height={640}
         loading="lazy"
